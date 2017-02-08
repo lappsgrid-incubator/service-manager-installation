@@ -19,7 +19,7 @@ The `setup.sh` script performs the following actions.
 
 1. Downloads the service-manager.properties file and opens it in a text editor. Make any required changes (the fields should be self-explanatory), save the file, and exit.
 1. Installs git, zip/unzip, and emacs if they are not already present on the system.
-1. Installs Openjdk 1.8
+1. Installs OpenJDK 1.8
 1. Installs PostgreSQL 9.6
 1. Installs Tomcat 7
 1. Generates all the XML configuration files; tomcat-user.xml, service-manager.xml, etc.
