@@ -28,7 +28,7 @@ The `setup.sh` script performs the following actions.
 
 ### Notes
 
-In most cases the ServiceManager.config file does not need to be edited. If you do need to make changes, for example to change the value of a field not listed in the *service-manager.properties* file you will need to download the file from *http://downloads.lappsgrid.org/service-manager/ServiceManger.config* and edit the file before running the `setup.sh` script.
+In most cases the ServiceManager.config file does not need to be edited. If you do need to make changes, for example to change the value of a field not listed in the *service-manager.properties* file you will need to download the file from *http://downloads.lappsgrid.org/service-manager/ServiceManager.config* and edit the file before running the `setup.sh` script.
 
 
 ### Troubleshooting
