@@ -107,8 +107,8 @@ for dir in $MANAGER $BPEL ; do
 done
 
 log "Downloading the latest service manager war file."
-wget https://github.com/openlangrid/langrid/releases/download/servicegrid-core-20161206/jp.go.nict.langrid.webapps.servicegrid-core.jxta-p2p.nict-nlp-20161206.war
-mv jp.go.nict.langrid.webapps.servicegrid-core.jxta-p2p.nict-nlp-20161206.war $MANAGER/webapps/service_manager.war
+wget https://github.com`wget -qO- https://github.com/openlangrid/langrid/releases/latest | grep --color=never \.war\" | cut -d '"' -f 2 `
+mv `ls *.war | head -1` $MANAGER/webapps/service_manager.war
 
 log "Removing default webapps."
 for dir in $MANAGER/webapps $BPEL/webapps ; do
@@ -118,7 +118,7 @@ for dir in $MANAGER/webapps $BPEL/webapps ; do
 done
 
 fi
-if [[ $OS = RedHat ]] ; then
+if [[ $OS = redhat7 ]] ; then
 	systemctl start tomcat
 else
 	service tomcat start
