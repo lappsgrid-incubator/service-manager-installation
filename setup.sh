@@ -58,7 +58,7 @@ curl -sSL $scripts/install-postgres.sh | bash
 # Edit the Service Manager config file. The config file is used
 # to generate then Tomcat config files.
 log "Configuring the Service Manager"
-if [ -e ServiceManager.config ] ; then
+if [ ! -e ServiceManager.config ] ; then
 	wget $service-manager/ServiceManager.config
 fi
 wget http://downloads.lappsgrid.org/$smg.tgz
