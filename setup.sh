@@ -2,7 +2,7 @@
 set -u
 
 smg=smg-1.1.0-SNAPSHOT
-service-manager=http://downloads.lappsgrid.org/service-manager
+manager=http://downloads.lappsgrid.org/service-manager
 scripts=http://downloads.lappsgrid.org/scripts
 
 function usage()
@@ -43,7 +43,7 @@ set -u
 
 # Edit the properties file first to get it out of the way and allow then
 # rest of the script to continue uninterrupted.
-wget $service-manager/service-manager.properties
+wget $manager/service-manager.properties
 $EDITOR service-manager.properties
 
 # Installs the packages required to install and run the Service Grid.
@@ -59,7 +59,7 @@ curl -sSL $scripts/install-postgres.sh | bash
 # to generate then Tomcat config files.
 log "Configuring the Service Manager"
 if [ ! -e ServiceManager.config ] ; then
-	wget $service-manager/ServiceManager.config
+	wget $manager/ServiceManager.config
 fi
 wget http://downloads.lappsgrid.org/$smg.tgz
 tar xzf $smg.tgz
@@ -82,7 +82,7 @@ cp langrid.ae.properties $BPEL/bpr
 source ./db.config
 
 log "Creating role, database and stored procedure."
-wget $service-manager/create_storedproc.sql
+wget $manager/create_storedproc.sql
 createuser -S -D -R $ROLENAME
 psql --command "ALTER USER $ROLENAME WITH PASSWORD '$PASSWORD'"
 createdb $DATABASE -O $ROLENAME -E 'UTF8'
