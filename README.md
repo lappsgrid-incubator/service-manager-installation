@@ -1,4 +1,4 @@
-# Setting up the Service Manger
+# Setting up the Service Manager
 
 ## The Short Version
 
