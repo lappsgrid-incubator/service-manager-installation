@@ -39,17 +39,18 @@ set +u
 if [[ -z "$EDITOR" ]] ; then
 	EDITOR=emacs
 fi
-set -u
+set -eu
 
-# Edit the properties file first to get it out of the way and allow then
+# Installs the packages required to install and run the Service Grid.
+log "Installing common packages"
+curl -sSL $scripts/install-common.sh | bash
+
+# Edit the properties file to get it out of the way and allow then
 # rest of the script to continue uninterrupted.
 wget $manager/service-manager.properties
 $EDITOR service-manager.properties
 
-# Installs the packages required to install and run the Service Grid.
-set -e
-log "Installing common packages"
-curl -sSL $scripts/install-common.sh | bash
+
 log "Installing Java"
 curl -sSL $scripts/install-java.sh | bash
 log "Installing PostgreSQL"
@@ -70,7 +71,7 @@ $smg/smg ServiceManager.config
 log "Starting Tomcat installation."
 MANAGER=/usr/share/tomcat/service-manager
 BPEL=/usr/share/tomcat/active-bpel
-curl -sSL $scripts/install-tomcat.sh | bash
+curl -sSL $manager/install-tomcat.sh | bash
 
 cp tomcat-users.xml $MANAGER/conf
 cp service_manager.xml $MANAGER/conf/Catalina/localhost
@@ -83,12 +84,12 @@ source ./db.config
 
 log "Creating role, database and stored procedure."
 wget $manager/create_storedproc.sql
-createuser -S -D -R $ROLENAME
-psql --command "ALTER USER $ROLENAME WITH PASSWORD '$PASSWORD'"
-createdb $DATABASE -O $ROLENAME -E 'UTF8'
-createlang plpgsql $DATABASE
-psql $DATABASE < create_storedproc.sql
-psql $DATABASE -c "ALTER FUNCTION \"AccessStat.increment\"(character varying, character varying, character varying, character varying, character varying, timestamp without time zone, timestamp without time zone, integer, timestamp without time zone, integer, timestamp without time zone, integer, integer, integer, integer) OWNER TO $ROLENAME"
+sudo -u posgtres createuser -S -D -R $ROLENAME
+sudo -u posgtres psql --command "ALTER USER $ROLENAME WITH PASSWORD '$PASSWORD'"
+sudo -u posgtres createdb $DATABASE -O $ROLENAME -E 'UTF8'
+sudo -u posgtres createlang plpgsql $DATABASE
+sudo -u posgtres psql $DATABASE < create_storedproc.sql
+sudo -u posgtres psql $DATABASE -c "ALTER FUNCTION \"AccessStat.increment\"(character varying, character varying, character varying, character varying, character varying, timestamp without time zone, timestamp without time zone, integer, timestamp without time zone, integer, timestamp without time zone, integer, integer, integer, integer) OWNER TO $ROLENAME"
 
 log "Securing the Tomcat installations"
 for dir in $MANAGER $BPEL ; do
