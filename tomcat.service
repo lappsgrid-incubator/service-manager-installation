@@ -1,0 +1,21 @@
+[Unit]
+Description=Control script for Tomcat.
+After=syslog.target network.target
+
+[Service]
+Type=forking
+
+Environment=JAVA_HOME=/usr/lib/jvm/jre
+Environment=TOMCAT_ROOT=/usr/share/tomcat
+Environment=MANAGER=$TOMCAT_ROOT/service-manager
+Environment=BPEL=$TOMCAT_ROOT/active-bpel
+
+User=tomcat
+Group=tomcat
+
+ExecStart=/bin/bash -c '${MANAGER}/bin/startup.sh && ${BPEL}/bin/startup.sh'
+ExecStop=/bin/bash -c '${MANAGER}/bin/shutdown.sh && ${BPEL}/bin/shutdown.sh'
+
+[Install]
+WantedBy=multi-user.target
+
