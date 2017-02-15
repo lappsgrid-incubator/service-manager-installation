@@ -83,12 +83,7 @@ cp langrid.ae.properties $BPEL/bpr
 source ./db.config
 
 log "Creating role, database and stored procedure."
-service postgresql start
 wget $manager/create_storedproc.sql
-until pg_isready ; do 
-	echo "Waiting for PostgreSQL service to start"
-	sleep 2
-done
 createuser -S -D -R $ROLENAME
 psql --command "ALTER USER $ROLENAME WITH PASSWORD '$PASSWORD'"
 createdb $DATABASE -O $ROLENAME -E 'UTF8'
