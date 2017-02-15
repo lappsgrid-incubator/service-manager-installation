@@ -22,8 +22,8 @@ chown -R tomcat:tomcat /usr/share/tomcat
 if [[ $OS = centos ]] ; then
     wget http://downloads.lappsgrid.org/service-manage/tomcat.service
     mv tomcat.service /etc/systemd/system/
-	systemctl daemon-reload
-	systemctl enable tomcat.service
+    systemctl daemon-reload
+    systemctl enable tomcat.service
     systemctl start tomcat.service
 elif [[ $OS = ubuntu || $OS = redhat ]] ; then
     wget http://downloads.lappsgrid.org/service-manage/tomcat.sh
