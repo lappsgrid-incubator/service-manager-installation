@@ -7,7 +7,8 @@ fi
 if [[ $OS = redhat || $OS = centos ]] ; then
     adduser -r -d /usr/share/tomcat -s /usr/bin/bash tomcat
 elif [[ $OS = ubuntu ]] ; then
-    adduser --system --home /usr/share/tomcat --shell /usr/bin/bash tomcat
+    groupadd tomcat
+    adduser --system --home /usr/share/tomcat --shell /usr/bin/bash --ingroup tomcat tomcat
 else
 	echo "Unknown Linux flavor"
 	exit 1
@@ -20,13 +21,12 @@ chown -R tomcat:tomcat /usr/share/tomcat
 
 
 if [[ $OS = centos ]] ; then
-    wget http://downloads.lappsgrid.org/service-manage/tomcat.service
+    wget http://downloads.lappsgrid.org/service-manager/tomcat.service
     mv tomcat.service /etc/systemd/system/
     systemctl daemon-reload
     systemctl enable tomcat.service
-    systemctl start tomcat.service
 elif [[ $OS = ubuntu || $OS = redhat ]] ; then
-    wget http://downloads.lappsgrid.org/service-manage/tomcat.sh
+    wget http://downloads.lappsgrid.org/service-manager/tomcat.sh
     mv tomcat.sh /etc/init.d
 	update-rc.d tomcat defaults
 else
