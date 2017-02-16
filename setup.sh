@@ -27,7 +27,7 @@ fi
 
 if [[ $OS = ubuntu ]] ; then
 	log "Updating apt-get indices."
-	apt-get update
+	apt-get update && apt-get upgrade -y
 elif [[ $OS = redhat || $OS = centos ]] ; then
 	yum makecache fast
 else
