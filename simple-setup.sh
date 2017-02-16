@@ -48,7 +48,9 @@ set -eu
 
 # Edit the properties file to get it out of the way and allow then
 # rest of the script to continue uninterrupted.
-wget $manager/service-manager.properties
+if [[ ! -e service-manager.properties ]] ; then
+	wget $manager/service-manager.properties
+fi
 $EDITOR service-manager.properties
 
 # Edit the Service Manager config file. The config file is used
