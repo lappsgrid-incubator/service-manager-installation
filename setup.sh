@@ -65,6 +65,13 @@ fi
 wget http://downloads.lappsgrid.org/$smg.tgz
 tar xzf $smg.tgz
 chmod +x $smg/smg
+# this will generate; 
+# service_manager.xml
+# active-bpel.xml
+# tomcat-users.xml
+# tomcat-users-bpel.xml
+# langrid.ae.properties
+# db.config
 $smg/smg ServiceManager.config
 
 # Now install Tomcat and create the PostgreSQL database.
@@ -84,12 +91,12 @@ source ./db.config
 
 log "Creating role, database and stored procedure."
 wget $manager/create_storedproc.sql
-createuser -S -D -R $ROLENAME
-psql --command "ALTER USER $ROLENAME WITH PASSWORD '$PASSWORD'"
-createdb $DATABASE -O $ROLENAME -E 'UTF8'
-createlang plpgsql $DATABASE
-psql $DATABASE < create_storedproc.sql
-psql $DATABASE -c "ALTER FUNCTION \"AccessStat.increment\"(character varying, character varying, character varying, character varying, character varying, timestamp without time zone, timestamp without time zone, integer, timestamp without time zone, integer, timestamp without time zone, integer, integer, integer, integer) OWNER TO $ROLENAME"
+sudo -u postgres createuser -S -D -R $ROLENAME
+sudo -u postgres psql --command "ALTER USER $ROLENAME WITH PASSWORD '$PASSWORD'"
+sudo -u postgres createdb $DATABASE -O $ROLENAME -E 'UTF8'
+sudo -u postgres createlang plpgsql $DATABASE
+sudo -u postgres psql $DATABASE < create_storedproc.sql
+sudo -u postgres psql $DATABASE -c "ALTER FUNCTION \"AccessStat.increment\"(character varying, character varying, character varying, character varying, character varying, timestamp without time zone, timestamp without time zone, integer, timestamp without time zone, integer, timestamp without time zone, integer, integer, integer, integer) OWNER TO $ROLENAME"
 
 log "Securing the Tomcat installations"
 for dir in $MANAGER $BPEL ; do
@@ -118,7 +125,6 @@ for dir in $MANAGER/webapps $BPEL/webapps ; do
 	popd > /dev/null
 done
 
-fi
 if [[ $OS = redhat7 ]] ; then
 	systemctl start tomcat
 else
