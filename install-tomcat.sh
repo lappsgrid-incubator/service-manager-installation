@@ -21,12 +21,12 @@ chown -R tomcat:tomcat /usr/share/tomcat
 
 
 if [[ $OS = centos ]] ; then
-    wget http://downloads.lappsgrid.org/service-manage/tomcat.service
+    wget http://downloads.lappsgrid.org/service-manager/tomcat.service
     mv tomcat.service /etc/systemd/system/
     systemctl daemon-reload
     systemctl enable tomcat.service
 elif [[ $OS = ubuntu || $OS = redhat ]] ; then
-    wget http://downloads.lappsgrid.org/service-manage/tomcat.sh
+    wget http://downloads.lappsgrid.org/service-manager/tomcat.sh
     mv tomcat.sh /etc/init.d
 	update-rc.d tomcat defaults
 else
