@@ -85,7 +85,11 @@ cp langrid.ae.properties $BPEL/bpr
 source ./db.config
 
 log "Creating role, database and stored procedure."
-HOME=/var/lib/postgresql sudo -u postgres ./database-setup.sh
+wget $manager/create_storedproc.sql
+wget http://downloads.lappsgrid.org/service-manager/database-setup.sh
+echo '#!/usr/bin/env bash' | cat - db.config database-setup.sh > /tmp/database-setup.sh
+chmod +x /tmp/database-setup.sh
+su - postgres -c "bash /tmp/database-setup.sh"
 
 log "Securing the Tomcat installations"
 for dir in $MANAGER $BPEL ; do
