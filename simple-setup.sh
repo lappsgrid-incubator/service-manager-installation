@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -u
 
+# A setup script that assumes that Postgres and Java 8
+# have already been installed on the instance.
+
 smg=smg-1.1.0-SNAPSHOT
 manager=http://downloads.lappsgrid.org/service-manager
 scripts=http://downloads.lappsgrid.org/scripts
@@ -9,8 +12,10 @@ function usage()
 {
 	echo
 	echo "USAGE"
-	echo "   sudo ./setup.sh"
+	echo "   sudo ./simple-setup.sh [--secure]"
 	echo
+	echo "If the --secure option is specifed the default Tomcat webapps"
+	echo "(manager, host-manager, etc) will be removed."
 	echo
 }
 
@@ -27,7 +32,7 @@ fi
 
 if [[ $OS = ubuntu ]] ; then
 	log "Updating apt-get indices."
-	apt-get update
+	apt-get update && apt-get upgrade -y
 elif [[ $OS = redhat || $OS = centos ]] ; then
 	yum makecache fast
 else
@@ -41,20 +46,10 @@ if [[ -z "$EDITOR" ]] ; then
 fi
 set -eu
 
-# Installs the packages required to install and run the Service Grid.
-log "Installing common packages"
-curl -sSL $scripts/install-common.sh | bash
-
 # Edit the properties file to get it out of the way and allow then
 # rest of the script to continue uninterrupted.
 wget $manager/service-manager.properties
 $EDITOR service-manager.properties
-
-
-log "Installing Java"
-curl -sSL $scripts/install-java.sh | bash
-log "Installing PostgreSQL"
-curl -sSL $scripts/install-postgres.sh | bash
 
 # Edit the Service Manager config file. The config file is used
 # to generate then Tomcat config files.
