@@ -28,6 +28,7 @@ if [[ $OS = centos ]] ; then
 elif [[ $OS = ubuntu || $OS = redhat ]] ; then
     wget http://downloads.lappsgrid.org/service-manager/tomcat.sh
     mv tomcat.sh /etc/init.d/tomcat
+    chmod +x /etc/init.d/tomcat
 	update-rc.d tomcat defaults
 else
 	echo "Unknown Linux flavor... we should have failed already."
