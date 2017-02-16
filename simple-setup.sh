@@ -88,9 +88,11 @@ source ./db.config
 
 log "Creating role, database and stored procedure."
 wget $manager/create_storedproc.sql
-wget http://downloads.lappsgrid.org/service-manager/database-setup.sh
+wget $manager/create_indices.sql
+wget $manager/database-setup.sh
 echo '#!/usr/bin/env bash' | cat - db.config database-setup.sh > /tmp/database-setup.sh
 chmod +x /tmp/database-setup.sh
+mv *.sql /tmp
 su - postgres -c "bash /tmp/database-setup.sh"
 
 log "Securing the Tomcat installations"
