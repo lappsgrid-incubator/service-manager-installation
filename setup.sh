@@ -47,22 +47,16 @@ curl -sSL $scripts/install-common.sh | bash
 
 # Edit the properties file to get it out of the way and allow then
 # rest of the script to continue uninterrupted.
-wget $manager/service-manager.properties
-$EDITOR service-manager.properties
-
-
-log "Installing Java"
-curl -sSL $scripts/install-java.sh | bash
-log "Installing PostgreSQL"
-curl -sSL $scripts/install-postgres.sh | bash
-
-# Edit the properties file to get it out of the way and allow then
-# rest of the script to continue uninterrupted.
 log "Configuring the Service Manager"
 if [[ ! -e service-manager.properties ]] ; then
 	wget $manager/service-manager.properties
 fi
 $EDITOR service-manager.properties
+
+log "Installing Java"
+curl -sSL $scripts/install-java.sh | bash
+log "Installing PostgreSQL"
+curl -sSL $scripts/install-postgres.sh | bash
 
 if [ ! -e ServiceManager.config ] ; then
 	wget $manager/ServiceManager.config
