@@ -56,22 +56,31 @@ curl -sSL $scripts/install-java.sh | bash
 log "Installing PostgreSQL"
 curl -sSL $scripts/install-postgres.sh | bash
 
-# Edit the Service Manager config file. The config file is used
-# to generate then Tomcat config files.
+# Edit the properties file to get it out of the way and allow then
+# rest of the script to continue uninterrupted.
 log "Configuring the Service Manager"
+if [[ ! -e service-manager.properties ]] ; then
+	wget $manager/service-manager.properties
+fi
+$EDITOR service-manager.properties
+
 if [ ! -e ServiceManager.config ] ; then
 	wget $manager/ServiceManager.config
 fi
+
+# Get the program used to transform the ServiceManager.config file
+# into the various xml files.
 wget http://downloads.lappsgrid.org/$smg.tgz
 tar xzf $smg.tgz
 chmod +x $smg/smg
-# this will generate; 
-# service_manager.xml
-# active-bpel.xml
-# tomcat-users.xml
-# tomcat-users-bpel.xml
-# langrid.ae.properties
-# db.config
+
+# Processing the ServiceManager.config will generate:
+# 	service_manager.xml
+# 	active-bpel.xml
+# 	tomcat-users.xml
+# 	tomcat-users-bpel.xml
+# 	langrid.ae.properties
+# 	db.config
 $smg/smg ServiceManager.config
 
 # Now install Tomcat and create the PostgreSQL database.
@@ -87,16 +96,18 @@ cp tomcat-users-bpel.xml $BPEL/conf/tomcat-users.xml
 cp active-bpel.xml $BPEL/conf/Catalina/localhost
 cp langrid.ae.properties $BPEL/bpr
 
-source ./db.config
-
 log "Creating role, database and stored procedure."
+# Grab the SQL and setup scripts.
 wget $manager/create_storedproc.sql
-sudo -u postgres createuser -S -D -R $ROLENAME
-sudo -u postgres psql --command "ALTER USER $ROLENAME WITH PASSWORD '$PASSWORD'"
-sudo -u postgres createdb $DATABASE -O $ROLENAME -E 'UTF8'
-sudo -u postgres createlang plpgsql $DATABASE
-sudo -u postgres psql $DATABASE < create_storedproc.sql
-sudo -u postgres psql $DATABASE -c "ALTER FUNCTION \"AccessStat.increment\"(character varying, character varying, character varying, character varying, character varying, timestamp without time zone, timestamp without time zone, integer, timestamp without time zone, integer, timestamp without time zone, integer, integer, integer, integer) OWNER TO $ROLENAME"
+wget $manager/create_indices.sql
+wget $manager/database-setup.sh
+
+# Generate a custom database-setup.sh with the settings generated above.
+echo '#!/usr/bin/env bash' | cat - db.config database-setup.sh > /tmp/database-setup.sh
+chmod +x /tmp/database-setup.sh
+mv *.sql /tmp
+# Now run the setup script as the postgres user.
+su - postgres -c "bash /tmp/database-setup.sh"
 
 log "Securing the Tomcat installations"
 for dir in $MANAGER $BPEL ; do
