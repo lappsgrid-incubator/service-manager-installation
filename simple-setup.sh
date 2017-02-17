@@ -62,13 +62,14 @@ fi
 wget http://downloads.lappsgrid.org/$smg.tgz
 tar xzf $smg.tgz
 chmod +x $smg/smg
-# this will generate; 
-# service_manager.xml
-# active-bpel.xml
-# tomcat-users.xml
-# tomcat-users-bpel.xml
-# langrid.ae.properties
-# db.config
+
+# Processing the ServiceManager.config will generate:
+# 	service_manager.xml
+# 	active-bpel.xml
+# 	tomcat-users.xml
+# 	tomcat-users-bpel.xml
+# 	langrid.ae.properties
+# 	db.config
 $smg/smg ServiceManager.config
 
 # Now install Tomcat and create the PostgreSQL database.
