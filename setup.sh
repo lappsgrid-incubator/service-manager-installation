@@ -23,7 +23,7 @@ function log {
 }
 
 function start_tomcat {
-	if [[ $OS = redhat7 || $OS = centos]] ; then
+	if [[ $OS = redhat7 || $OS = centos ]] ; then
 		systemctl start tomcat
 	else
 		service tomcat start
@@ -31,7 +31,7 @@ function start_tomcat {
 }
 
 function stop_tomcat {
-	if [[ $OS = redhat7 || $OS = centos]] ; then
+	if [[ $OS = redhat7 || $OS = centos ]] ; then
 		systemctl stop tomcat
 	else
 		service tomcat stop
