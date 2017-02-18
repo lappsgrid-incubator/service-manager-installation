@@ -20,7 +20,7 @@ function usage()
 
 function log {
 	echo $1
-	echo "$(date '$b %d %Y %Y')  - $1" >> /var/log/service-manager-install.log 
+	echo "$(date +'$b %d %Y %Y')  - $1" >> /var/log/service-manager-install.log 
 }
 
 function start_tomcat {
