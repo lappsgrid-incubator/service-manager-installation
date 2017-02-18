@@ -19,7 +19,8 @@ function usage()
 }
 
 function log {
-	echo $1 | tee /var/log/service-manager-install.log >&2
+	echo $1
+	echo "$(date '$b %d %Y %Y')  - $1" >> /var/log/service-manager-install.log 
 }
 
 function start_tomcat {
@@ -190,6 +191,7 @@ mv `ls *.war | head -1` $MANAGER/webapps/service_manager.war
 #done
 
 if [[ $OS = redhat7 || $OS = centos ]] ; then
+	echo "Opening port 8080"
 	iptables -I INPUT -p tcp -m tcp --dport 8080 -j ACCEPT
 fi
 
