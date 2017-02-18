@@ -41,7 +41,7 @@ function stop_tomcat {
 function wait_for {
 	while ! grep "Server startup in" $1/logs/catalina.out ; do
 		echo "Waiting for $1 to start"
-		sleep 1
+		sleep 3
 	done
 }
 
@@ -153,13 +153,14 @@ wget $manager/database-setup.sh
 #rm /tmp/*.sql
 
 #createlang plpgsql $DATABASE
-sudo -u postgres psql $DATABASE < /tmp/create_indices.sql
-sudo -u postgres psql $DATABASE < /tmp/create_storedproc.sql
+cat create_indices.sql | sudo -u postgres psql $DATABASE
+cat create_storedproc.sql | sudo -u postgres psql $DATABASE 
+
+# We need to generate this on the fly since it include the user
+# defined ROLENAME.
 echo "ALTER FUNCTION \"AccessStat.increment\"(character varying, character varying, character varying, character varying, character varying, timestamp without time zone, timestamp without time zone, integer, timestamp without time zone, integer, timestamp without time zone, integer, integer, integer, integer) OWNER TO $ROLENAME" > /tmp/alter.sql
 #psql $DATABSE < /tmp/alter.sql
 cat /tmp/alter.sql | sudo -u postgres psql $DATABASE
-
-#psql $DATABASE -c "ALTER FUNCTION \"AccessStat.increment\"(character varying, character varying, character varying, character varying, character varying, timestamp without time zone, timestamp without time zone, integer, timestamp without time zone, integer, timestamp without time zone, integer, integer, integer, integer) OWNER TO $ROLENAME"
 
 log "Securing the Tomcat installations"
 for dir in $MANAGER $BPEL ; do
@@ -181,12 +182,12 @@ log "Downloading the latest service manager war file."
 wget https://github.com`wget -qO- https://github.com/openlangrid/langrid/releases/latest | grep --color=never \.war\" | cut -d '"' -f 2 `
 mv `ls *.war | head -1` $MANAGER/webapps/service_manager.war
 
-log "Removing default webapps."
-for dir in $MANAGER/webapps $BPEL/webapps ; do
-	pushd $dir > /dev/null
-	rm -rf docs examples manager host-manager
-	popd > /dev/null
-done
+#log "Removing default webapps."
+#for dir in $MANAGER/webapps $BPEL/webapps ; do
+#	pushd $dir > /dev/null
+#	rm -rf docs examples manager host-manager
+#	popd > /dev/null
+#done
 
 #if [[ $OS = redhat7 ]] ; then
 #	systemctl start tomcat
