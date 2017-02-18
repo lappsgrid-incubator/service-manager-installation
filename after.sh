@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+log "Creating indices and stored procedure."
+# Grab the SQL and setup scripts.
+wget $manager/create_storedproc.sql
+wget $manager/create_indices.sql
+
 psql -U postgres $DATABASE < /tmp/create_indices.sql
 psql -U postgres $DATABASE < /tmp/create_storedproc.sql
 echo "ALTER FUNCTION \"AccessStat.increment\"(character varying, character varying, character varying, character varying, character varying, timestamp without time zone, timestamp without time zone, integer, timestamp without time zone, integer, timestamp without time zone, integer, integer, integer, integer) OWNER TO $ROLENAME" > /tmp/alter.sql
