@@ -102,7 +102,7 @@ chmod +x /tmp/database-setup.sh
 mv *.sql /tmp
 # Now run the setup script as the postgres user.
 su - postgres -c "bash /tmp/database-setup.sh"
-rm /tmp*.sql
+rm /tmp/*.sql
 
 log "Securing the Tomcat installations"
 for dir in $MANAGER $BPEL ; do
