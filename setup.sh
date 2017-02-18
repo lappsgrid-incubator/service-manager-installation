@@ -39,7 +39,7 @@ function stop_tomcat {
 }
 
 function wait_for {
-	while ! grep "Server startup in" $1/log/catalina.out ; do
+	while ! grep "Server startup in" $1/logs/catalina.out ; do
 		echo "Waiting for $1 to start"
 		sleep 1
 	done
