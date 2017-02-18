@@ -78,6 +78,7 @@ chmod +x $smg/smg
 # 	langrid.ae.properties
 # 	db.config
 $smg/smg ServiceManager.config
+source db.config
 
 #wget $manager/database-setup.sh
 
