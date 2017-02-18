@@ -189,11 +189,9 @@ mv `ls *.war | head -1` $MANAGER/webapps/service_manager.war
 #	popd > /dev/null
 #done
 
-#if [[ $OS = redhat7 ]] ; then
-#	systemctl start tomcat
-#else
-#	service tomcat start
-#fi
+if [[ $OS = redhat7 || $OS = centos ]] ; then
+	iptables -I INPUT -p tcp -m tcp --dport 8080 -j ACCEPT
+fi
 
 start_tomcat 
 
