@@ -41,7 +41,7 @@ function stop_tomcat {
 
 function wait_for {
 	while ! grep "Server startup in" $1/logs/catalina.out ; do
-		echo "Waiting for $1 to start"
+		log "Waiting for $1 to start"
 		sleep 3
 	done
 }
@@ -145,22 +145,12 @@ wget $manager/create_storedproc.sql
 wget $manager/create_indices.sql
 wget $manager/database-setup.sh
 
-# Generate a custom database-setup.sh with the settings generated above.
-#echo '#!/usr/bin/env bash' | cat - db.config database-setup.sh > /tmp/database-setup.sh
-#chmod +x /tmp/database-setup.sh
-#mv *.sql /tmp
-# Now run the setup script as the postgres user.
-#su - postgres -c "bash /tmp/database-setup.sh"
-#rm /tmp/*.sql
-
-#createlang plpgsql $DATABASE
 cat create_indices.sql | sudo -u postgres psql $DATABASE
 cat create_storedproc.sql | sudo -u postgres psql $DATABASE 
 
 # We need to generate this on the fly since it include the user
 # defined ROLENAME.
 echo "ALTER FUNCTION \"AccessStat.increment\"(character varying, character varying, character varying, character varying, character varying, timestamp without time zone, timestamp without time zone, integer, timestamp without time zone, integer, timestamp without time zone, integer, integer, integer, integer) OWNER TO $ROLENAME" > /tmp/alter.sql
-#psql $DATABSE < /tmp/alter.sql
 cat /tmp/alter.sql | sudo -u postgres psql $DATABASE
 
 log "Securing the Tomcat installations"
@@ -191,7 +181,7 @@ mv `ls *.war | head -1` $MANAGER/webapps/service_manager.war
 #done
 
 if [[ $OS = redhat7 || $OS = centos ]] ; then
-	echo "Opening port 8080"
+	log "Opening port 8080"
 	iptables -I INPUT -p tcp -m tcp --dport 8080 -j ACCEPT
 fi
 
