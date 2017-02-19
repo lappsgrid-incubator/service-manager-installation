@@ -139,6 +139,11 @@ cp tomcat-users-bpel.xml $BPEL/conf/tomcat-users.xml
 cp active-bpel.xml $BPEL/conf/Catalina/localhost
 cp langrid.ae.properties $BPEL/bpr
 
+# Get the new .war file before starting Tomcat for the first time.
+log "Downloading the latest service manager war file."
+wget https://github.com`wget -qO- https://github.com/openlangrid/langrid/releases/latest | grep --color=never \.war\" | cut -d '"' -f 2 `
+mv `ls *.war | head -1` $MANAGER/webapps/service_manager.war
+
 toggle_tomcat
 
 log "Creating indices."
@@ -170,10 +175,6 @@ for dir in $MANAGER $BPEL ; do
 	chmod -R 0770 webapps
 	popd > /dev/null
 done
-
-log "Downloading the latest service manager war file."
-wget https://github.com`wget -qO- https://github.com/openlangrid/langrid/releases/latest | grep --color=never \.war\" | cut -d '"' -f 2 `
-mv `ls *.war | head -1` $MANAGER/webapps/service_manager.war
 
 #log "Removing default webapps."
 #for dir in $MANAGER/webapps $BPEL/webapps ; do
