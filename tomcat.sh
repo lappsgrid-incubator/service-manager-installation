@@ -4,7 +4,7 @@ TOMCAT=/usr/share/tomcat
 MANAGER=$TOMCAT/service-manager
 BPEL=$TOMCAT/active-bpel
 
-if [[ -z $JAVA_HOME ]] ; then
+	if [[ -z $JAVA_HOME ]] ; then
 	export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
 fi
 

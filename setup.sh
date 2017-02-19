@@ -54,6 +54,7 @@ function toggle_tomcat {
 	wait_for $MANAGER
 	wait_for $BPEL
 	stop_tomcat
+	sleep 5
 }
 
 source <(curl -sSL http://downloads.lappsgrid.org/scripts/sniff.sh)
