@@ -5,6 +5,10 @@ smg=smg-1.1.0-SNAPSHOT
 manager=http://downloads.lappsgrid.org/service-manager
 scripts=http://downloads.lappsgrid.org/scripts
 
+# Locations that Tomcat is installed.
+MANAGER=/usr/share/tomcat/service-manager
+BPEL=/usr/share/tomcat/active-bpel
+
 function usage()
 {
 	echo
@@ -15,7 +19,40 @@ function usage()
 }
 
 function log {
-	echo $1 | tee /var/log/service-manager-install.log >&2
+	echo $1
+	echo "$(date +'%b %d %Y %Y') - $1" >> /var/log/service-manager-install.log 
+}
+
+function start_tomcat {
+	log "Staring tomcat."
+	if [[ $OS = redhat7 || $OS = centos ]] ; then
+		systemctl start tomcat
+	else
+		service tomcat start
+	fi
+}
+
+function stop_tomcat {
+	log "Stopping tomcat."
+	if [[ $OS = redhat7 || $OS = centos ]] ; then
+		systemctl stop tomcat
+	else
+		service tomcat stop
+	fi
+}
+
+function wait_for {
+	while ! grep "Server startup in" $1/logs/catalina.out ; do
+		log "Waiting for $1 to start"
+		sleep 3
+	done
+}
+
+function toggle_tomcat {
+	start_tomcat
+	wait_for $MANAGER
+	wait_for $BPEL
+	stop_tomcat
 }
 
 source <(curl -sSL http://downloads.lappsgrid.org/scripts/sniff.sh)
@@ -58,7 +95,14 @@ curl -sSL $scripts/install-java.sh | bash
 log "Installing PostgreSQL"
 curl -sSL $scripts/install-postgres.sh | bash
 
-# Create the database and role needed by the service manager.
+if [[ $OS = centos || $OS = redhat7 ]] ; then
+	hba=/var/lib/pgsql/9.6/data/pg_hba.conf
+	rm $hba
+	echo "local all all trust" > $hba
+	echo "host all all 127.0.0.1/32 trust" >> $hba
+	echo "host all all ::1/128 trust" >> $hba
+	systemctl restart postgresql-9.6
+fi
 
 if [ ! -e ServiceManager.config ] ; then
 	wget $manager/ServiceManager.config
@@ -80,23 +124,12 @@ chmod +x $smg/smg
 $smg/smg ServiceManager.config
 source db.config
 
-#wget $manager/database-setup.sh
-
-# Generate a custom database-setup.sh with the settings generated above.
-#echo '#!/usr/bin/env bash' | cat - db.config database-setup.sh > /tmp/database-setup.sh
-#chmod +x /tmp/database-setup.sh
-#mv *.sql /tmp
-# Now run the setup script as the postgres user.
-#su - postgres -c "bash /tmp/database-setup.sh"
-#rm /tmp/*.sql
-createuser -U postgres -S -D -R $ROLENAME
-psql -U postgres --command "ALTER USER $ROLENAME WITH PASSWORD '$PASSWORD'"
-createdb -U postgres $DATABASE -O $ROLENAME -E 'UTF8'
+sudo -u postgres createuser -S -D -R $ROLENAME
+sudo -u postgres psql --command "ALTER USER $ROLENAME WITH PASSWORD '$PASSWORD'"
+sudo -u postgres createdb $DATABASE -O $ROLENAME -E 'UTF8'
 
 # Now install Tomcat and create the PostgreSQL database.
 log "Starting Tomcat installation."
-MANAGER=/usr/share/tomcat/service-manager
-BPEL=/usr/share/tomcat/active-bpel
 curl -sSL $manager/install-tomcat.sh | bash
 
 cp tomcat-users.xml $MANAGER/conf
@@ -106,3 +139,9 @@ cp tomcat-users-bpel.xml $BPEL/conf/tomcat-users.xml
 cp active-bpel.xml $BPEL/conf/Catalina/localhost
 cp langrid.ae.properties $BPEL/bpr
 
+# Get the new .war file before starting Tomcat for the first time.
+log "Downloading the latest service manager war file."
+wget https://github.com`wget -qO- https://github.com/openlangrid/langrid/releases/latest | grep --color=never \.war\" | cut -d '"' -f 2 `
+mv `ls *.war | head -1` $MANAGER/webapps/service_manager.war
+
+toggle_tomcat
