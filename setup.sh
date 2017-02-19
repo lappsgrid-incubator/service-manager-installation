@@ -20,10 +20,11 @@ function usage()
 
 function log {
 	echo $1
-	echo "$(date +'$b %d %Y %Y')  - $1" >> /var/log/service-manager-install.log 
+	echo "$(date +'%b %d %Y %Y') - $1" >> /var/log/service-manager-install.log 
 }
 
 function start_tomcat {
+	log "Staring tomcat."
 	if [[ $OS = redhat7 || $OS = centos ]] ; then
 		systemctl start tomcat
 	else
@@ -32,6 +33,7 @@ function start_tomcat {
 }
 
 function stop_tomcat {
+	log "Stopping tomcat."
 	if [[ $OS = redhat7 || $OS = centos ]] ; then
 		systemctl stop tomcat
 	else
@@ -139,17 +141,17 @@ cp langrid.ae.properties $BPEL/bpr
 
 toggle_tomcat
 
-log "Creating indices and stored procedure."
-# Grab the SQL and setup scripts.
-wget $manager/create_storedproc.sql
+log "Creating indices."
 wget $manager/create_indices.sql
-wget $manager/database-setup.sh
-
 cat create_indices.sql | sudo -u postgres psql $DATABASE
+
+log "Creating stored procedure."
+wget $manager/create_storedproc.sql
 cat create_storedproc.sql | sudo -u postgres psql $DATABASE 
 
 # We need to generate this on the fly since it include the user
 # defined ROLENAME.
+log "Changing owner of the stored procedure."
 echo "ALTER FUNCTION \"AccessStat.increment\"(character varying, character varying, character varying, character varying, character varying, timestamp without time zone, timestamp without time zone, integer, timestamp without time zone, integer, timestamp without time zone, integer, integer, integer, integer) OWNER TO $ROLENAME" > /tmp/alter.sql
 cat /tmp/alter.sql | sudo -u postgres psql $DATABASE
 
