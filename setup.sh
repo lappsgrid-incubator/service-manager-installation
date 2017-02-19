@@ -157,8 +157,8 @@ cat create_storedproc.sql | sudo -u postgres psql $DATABASE
 # We need to generate this on the fly since it include the user
 # defined ROLENAME.
 log "Changing owner of the stored procedure."
-echo "ALTER FUNCTION \"AccessStat.increment\"(character varying, character varying, character varying, character varying, character varying, timestamp without time zone, timestamp without time zone, integer, timestamp without time zone, integer, timestamp without time zone, integer, integer, integer, integer) OWNER TO $ROLENAME" > /tmp/alter.sql
-cat /tmp/alter.sql | sudo -u postgres psql $DATABASE
+echo "ALTER FUNCTION \"AccessStat.increment\"(character varying, character varying, character varying, character varying, character varying, timestamp without time zone, timestamp without time zone, integer, timestamp without time zone, integer, timestamp without time zone, integer, integer, integer, integer) OWNER TO $ROLENAME" > alter.sql
+cat alter.sql | sudo -u postgres psql $DATABASE
 
 log "Securing the Tomcat installations"
 for dir in $MANAGER $BPEL ; do
