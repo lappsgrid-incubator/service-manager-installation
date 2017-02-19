@@ -6,7 +6,8 @@
 ### END INIT INFO
 
 if [ -z "$JAVA_HOME" ] ; then
-	JAVA_HOME=/usr/lib/jvm/java-7-oracle
+	#JAVA_HOME=/usr/lib/jvm/java-7-oracle
+	JAVA_HOME=java-8-openjdk-amd64
 fi
 
 TOMCAT_ROOT=/usr/share/tomcat
