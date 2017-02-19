@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+#manager=http://downloads.lappsgrid.org/service-manager
+manager=https://raw.githubusercontent.com/lappsgrid-incubator/service-manager-installation/17-centos-start
+
 if [ -z "$OS" ] ; then
 	source <(curl -sSL http://downloads.lappsgrid.org/scripts/sniff.sh)
 fi
@@ -21,12 +24,12 @@ chown -R tomcat:tomcat /usr/share/tomcat
 
 
 if [[ $OS = centos ]] ; then
-    wget http://downloads.lappsgrid.org/service-manager/tomcat.service
+    wget $manager/tomcat.service
     mv tomcat.service /etc/systemd/system/
     systemctl daemon-reload
     systemctl enable tomcat.service
 elif [[ $OS = ubuntu || $OS = redhat ]] ; then
-    wget http://downloads.lappsgrid.org/service-manager/tomcat.sh
+    wget $manager/tomcat.sh
     mv tomcat.sh /etc/init.d/tomcat
     chmod +x /etc/init.d/tomcat
 	update-rc.d tomcat defaults

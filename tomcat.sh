@@ -1,60 +1,136 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-### BEGIN INIT INFO
-# Provides:    tomcat
-# Description: Control script for Tomcat. 
-### END INIT INFO
+TOMCAT=/usr/share/tomcat
+MANAGER=$TOMCAT/service-manager
+BPEL=$TOMCAT/active-bpel
 
-if [ -z "$JAVA_HOME" ] ; then
-	#JAVA_HOME=/usr/lib/jvm/java-7-oracle
-	JAVA_HOME=java-8-openjdk-amd64
+if [[ -z $JAVA_HOME ]] ; then
+	export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
 fi
 
-TOMCAT_ROOT=/usr/share/tomcat
-MANAGER=$TOMCAT_ROOT/service-manager
-BPEL=$TOMCAT_ROOT/active-bpel
-TOMCAT_USER=tomcat
+function is_running()
+{
+    sudo ps aux | grep java | grep $1 > /dev/null
+    return $?
+}
+
+function if_running()
+{
+    program=$1
+    name=$2
+    is_running $program
+    if [ $? -eq 0 ] ; then
+		echo "Stopping $name"
+		sudo $program/shutdown.sh
+	else
+		echo "$name is already offline"
+	fi
+}
+
+function if_not_running()
+{
+    program=$1
+    name=$2
+    is_running $program
+    if [ $? -ne 0 ] ; then
+		echo "Starting $name"
+		sudo $program/startup.sh
+	else
+		echo "$name is already online."
+	fi
+}
 
 function start()
 {
-	sudo -u $TOMCAT_USER $MANAGER/bin/startup.sh
-	sudo -u $TOMCAT_USER $BPEL/bin/startup.sh
+    if_not_running $MANAGER/bin "Service Manager"
+    sleep 1
+    if_not_running $BPEL/bin "Active BPEL"
+    sleep 1
 }
 
 function stop()
 {
-	sudo -u $TOMCAT_USER $MANAGER/bin/shutdown.sh
-	sudo -u $TOMCAT_USER $BPEL/bin/shutdown.sh
+    if_running $MANAGER/bin "Service Manager"
+    sleep 1
+    if_running $BPEL/bin "Active BPEL"
+    sleep 1
+}
+
+function status()
+{
+    is_running $MANAGER/bin
+    if [ $? -eq 0 ] ; then
+		echo "Service Manager: online"
+	else
+		echo "Service Manager: offline"
+    fi
+    
+    is_running $BPEL/bin 
+    if [ $? -eq 0 ] ; then
+		echo "BPEL Server    : online"
+	else
+		echo "BPEL Server    : offline"
+    fi
+    echo
+}
+
+function usage()
+{
+    echo
+    echo "USAGE" 
+    echo "    tomcat [start|stop|status|restart|force-stop|force-restart"
+    echo
+}
+
+function kill_tomcat()
+{
+    echo "Killing zombie tomcat instances."
+    for proc in `ps a | grep java | grep ServiceGrid | cut -d\  -f1` ; do
+		echo "Killing zombie process $proc"
+		sudo kill -9 $proc
+	done
 }
 
 case $1 in
-	start)
-		echo -n "Staring Tomcat instances"
+    start)
+		echo "Starting the Service Grid."
 		start
-		echo "Done."
+		echo "Done"
 		;;
-	stop)
-		echo "Stopping Tomcat instances"
+    stop)
+		echo "Stopping the Service Grid."
 		stop
-		echo "Done."
+		echo "Done"
 		;;
-	restart)
-		echo "Restarting Tomcat instances"
+    status)
+		status
+		;;
+    restart)
+		echo "Restarting the Service Grid."
 		stop
 		sleep 5
 		start
 		echo "Done"
 		;;
-	force-reload)
-		echo "Forcing Tomcat instances to restart."
+    force-stop)
+		echo "Killing all Tomcat instances."
+		stop
+		echo "Waiting for tomcat to quit cleanly."
+		sleep 5
+		kill_tomcat 
+		echo "Done."
+		;;
+    force-restart)
+		echo "Forcing a restart."
 		stop
 		sleep 5
-		ps a | grep tomcat | grep java | cut -d\  -f2 | xargs kill -9
-		sleep 4
+		kill_tomcat
+		sleep 2
 		start
 		echo "Done."
 		;;
-	status)
-		echo "Unsupported option: status"
+    *)
+		echo "Unknown command $1"
+		usage
 		;;
 esac
