@@ -19,17 +19,17 @@ fi
 
 function getpid()
 {
-    echo `ps aux | grep $1 | grep -v grep | awk '{print $2}' > /dev/
+    echo `ps aux | grep $1 | grep -v grep | awk '{print $2}'`
 }
 
 function start()
 {
 	for server in service-manager active-bpel ; do
-		local pid = $(get_pid $server)
+		local pid=$(getpid $server)
 		if [[ -z $pid ]] ; then
 			$TOMCAT/$server/bin/startup.sh
 		else
-			echo "$1 is already running."
+			echo "$server is already running."
 		fi
 	done
 }
@@ -37,11 +37,11 @@ function start()
 function stop()
 {
 	for server in service-manager active-bpel ; do
-		local pid = $(get_pid $server)
+		local pid=$(getpid $server)
 		if [[ -n $pid ]] ; then
 			$TOMCAT/$server/bin/shutdown.sh
 		else
-			echo "$1 is already running."
+			echo "$server is not running."
 		fi
 	done
 }
@@ -74,7 +74,7 @@ function usage()
 function kill_tomcat()
 {
     echo "Killing zombie tomcat instances."
-    ps aux | grep tomcat | grep -v grep | awk '{print $2}' | xargs kill -9
+    ps aux | grep bootstrap.jar | grep -v grep | awk '{print $2}' | xargs kill -9
 }
 
 case $1 in
