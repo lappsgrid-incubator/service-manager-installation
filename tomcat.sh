@@ -29,7 +29,7 @@ function start()
 		if [[ -z $pid ]] ; then
 			$TOMCAT/$server/bin/startup.sh
 		else
-			echo "$server is already running."
+			echo "$server is already running: $pid"
 		fi
 	done
 }
