@@ -2,9 +2,9 @@
 
 # The manager variable should be picked up from the calling environment.  If not
 # we set it to a likely default value.
-if [[ -z $manager ]] ; then
+if [[ -z $MANAGER ]] ; then
 	#manager=http://downloads.lappsgrid.org/service-manager
-	manager=https://raw.githubusercontent.com/lappsgrid-incubator/service-manager-installation/17-centos-start
+	MANAGER=https://raw.githubusercontent.com/lappsgrid-incubator/service-manager-installation/17-centos-start
 fi
 
 if [ -z "$OS" ] ; then
@@ -28,12 +28,12 @@ chown -R tomcat:tomcat /usr/share/tomcat
 
 
 if [[ $OS = centos ]] ; then
-    wget $manager/tomcat.service
+    wget $MANAGER/tomcat.service
     mv tomcat.service /etc/systemd/system/
     systemctl daemon-reload
     systemctl enable tomcat.service
 elif [[ $OS = ubuntu || $OS = redhat ]] ; then
-    wget $manager/tomcat.sh
+    wget $MANAGER/tomcat.sh
     mv tomcat.sh /etc/init.d/tomcat
     chmod +x /etc/init.d/tomcat
 	update-rc.d tomcat defaults
