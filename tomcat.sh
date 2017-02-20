@@ -1,77 +1,66 @@
 #!/usr/bin/env bash
 
+### BEGIN INIT INFO
+# Provides:        tomcat7
+# Required-Start:  $network
+# Required-Stop:   $network
+# Default-Start:   2 3 4 5
+# Default-Stop:    0 1 6
+# Short-Description: Start/Stop Tomcat server
+### END INIT INFO
+
 TOMCAT=/usr/share/tomcat
 MANAGER=$TOMCAT/service-manager
 BPEL=$TOMCAT/active-bpel
 
-	if [[ -z $JAVA_HOME ]] ; then
+if [[ -z $JAVA_HOME ]] ; then
 	export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
 fi
 
-function is_running()
+function getpid()
 {
-    sudo ps aux | grep java | grep $1 > /dev/null
-    return $?
-}
-
-function if_running()
-{
-    program=$1
-    name=$2
-    is_running $program
-    if [ $? -eq 0 ] ; then
-		echo "Stopping $name"
-		sudo $program/shutdown.sh
-	else
-		echo "$name is already offline"
-	fi
-}
-
-function if_not_running()
-{
-    program=$1
-    name=$2
-    is_running $program
-    if [ $? -ne 0 ] ; then
-		echo "Starting $name"
-		sudo $program/startup.sh
-	else
-		echo "$name is already online."
-	fi
+    echo `ps aux | grep $1 | grep -v grep | awk '{print $2}' > /dev/
 }
 
 function start()
 {
-    if_not_running $MANAGER/bin "Service Manager"
-    sleep 1
-    if_not_running $BPEL/bin "Active BPEL"
-    sleep 1
+	for server in service-manager active-bpel ; do
+		local pid = $(get_pid $server)
+		if [[ -z $pid ]] ; then
+			$TOMCAT/$server/bin/startup.sh
+		else
+			echo "$1 is already running."
+		fi
+	done
 }
 
 function stop()
 {
-    if_running $MANAGER/bin "Service Manager"
-    sleep 1
-    if_running $BPEL/bin "Active BPEL"
-    sleep 1
+	for server in service-manager active-bpel ; do
+		local pid = $(get_pid $server)
+		if [[ -n $pid ]] ; then
+			$TOMCAT/$server/bin/shutdown.sh
+		else
+			echo "$1 is already running."
+		fi
+	done
 }
 
 function status()
 {
-    is_running $MANAGER/bin
-    if [ $? -eq 0 ] ; then
-		echo "Service Manager: online"
+	local pid=$(getpid service-manager)
+	if [[ -n $pid ]] ; then
+		echo "Service Manager: $pid"
 	else
 		echo "Service Manager: offline"
     fi
     
-    is_running $BPEL/bin 
-    if [ $? -eq 0 ] ; then
-		echo "BPEL Server    : online"
+	pid=$(getpid active-bpel)
+	if [[ -n $pid ]] ; then
+		echo "BPEL Server: $pid"
 	else
-		echo "BPEL Server    : offline"
+		echo "BPEL Server: offline"
     fi
-    echo
 }
 
 function usage()
@@ -85,16 +74,13 @@ function usage()
 function kill_tomcat()
 {
     echo "Killing zombie tomcat instances."
-    for proc in `ps a | grep java | grep ServiceGrid | cut -d\  -f1` ; do
-		echo "Killing zombie process $proc"
-		sudo kill -9 $proc
-	done
+    ps aux | grep tomcat | grep -v grep | awk '{print $2}' | xargs kill -9
 }
 
 case $1 in
     start)
 		echo "Starting the Service Grid."
-		start
+		start 
 		echo "Done"
 		;;
     stop)
@@ -107,7 +93,7 @@ case $1 in
 		;;
     restart)
 		echo "Restarting the Service Grid."
-		stop
+		stop 
 		sleep 5
 		start
 		echo "Done"
