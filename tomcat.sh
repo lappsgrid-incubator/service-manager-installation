@@ -27,7 +27,7 @@ function start()
 	for server in service-manager active-bpel ; do
 		local pid=$(getpid $server)
 		if [[ -z $pid ]] ; then
-			$TOMCAT/$server/bin/startup.sh
+			sudo -u tomcat $TOMCAT/$server/bin/startup.sh
 		else
 			echo "$server is already running: $pid"
 		fi
@@ -39,7 +39,7 @@ function stop()
 	for server in service-manager active-bpel ; do
 		local pid=$(getpid $server)
 		if [[ -n $pid ]] ; then
-			$TOMCAT/$server/bin/shutdown.sh
+			sudo -u tomcat $TOMCAT/$server/bin/shutdown.sh
 		else
 			echo "$server is not running."
 		fi
