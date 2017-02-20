@@ -39,3 +39,5 @@ else
 fi
 
 echo "Tomcat installed to /usr/share/tomcat"
+service tomcat status
+
