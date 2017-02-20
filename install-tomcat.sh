@@ -11,7 +11,8 @@ if [ -z "$OS" ] ; then
 	source <(curl -sSL http://downloads.lappsgrid.org/scripts/sniff.sh)
 fi
 
-if [[ ! `grep -c '^tomcat:' /etc/passwd` ]] ; then 
+#if [[ ! `grep -c '^tomcat:' /etc/passwd` ]] ; then 
+if ! id tomcat ; then
     if [[ $OS = redhat* || $OS = centos ]] ; then
         adduser -r -d /usr/share/tomcat -s /usr/bin/bash tomcat
     elif [[ $OS = ubuntu ]] ; then
