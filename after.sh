@@ -78,6 +78,7 @@ wget https://github.com`wget -qO- https://github.com/openlangrid/langrid/release
 mv `ls *.war | head -1` $TOMCAT_MANAGER/webapps/service_manager.war
 
 toggle_tomcat
+source db.confg
 
 log "Creating indices."
 wget $MANAGER/create_indices.sql
