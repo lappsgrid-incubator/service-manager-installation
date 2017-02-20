@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 
-#manager=http://downloads.lappsgrid.org/service-manager
-manager=https://raw.githubusercontent.com/lappsgrid-incubator/service-manager-installation/17-centos-start
+# The manager variable should be picked up from the calling environment.  If not
+# we set it to a likely default value.
+if [[ -z $manager ]] ; then
+	#manager=http://downloads.lappsgrid.org/service-manager
+	manager=https://raw.githubusercontent.com/lappsgrid-incubator/service-manager-installation/17-centos-start
+fi
 
 if [ -z "$OS" ] ; then
 	source <(curl -sSL http://downloads.lappsgrid.org/scripts/sniff.sh)
