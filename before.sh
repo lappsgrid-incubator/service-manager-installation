@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -u
 
-smg=smg-1.1.0-SNAPSHOT
+export SMG=smg-1.1.0-SNAPSHOT
 #manager=http://downloads.lappsgrid.org/service-manager
-manager=https://raw.githubusercontent.com/lappsgrid-incubator/service-manager-installation/17-centos-start
-scripts=http://downloads.lappsgrid.org/scripts
+export MANAGER=https://raw.githubusercontent.com/lappsgrid-incubator/service-manager-installation/17-centos-start
+export SCRIPTS=http://downloads.lappsgrid.org/scripts
 
 # Locations that Tomcat is installed.
-MANAGER=/usr/share/tomcat/service-manager
-BPEL=/usr/share/tomcat/active-bpel
+TOMCAT_MANAGER=/usr/share/tomcat/service-manager
+TOMCAT_BPEL=/usr/share/tomcat/active-bpel
 
 function usage()
 {
@@ -51,9 +51,10 @@ function wait_for {
 
 function toggle_tomcat {
 	start_tomcat
-	wait_for $MANAGER
-	wait_for $BPEL
+	wait_for $TOMCAT_MANAGER
+	wait_for $TOMCAT_BPEL
 	stop_tomcat
+	sleep 5
 }
 
 source <(curl -sSL http://downloads.lappsgrid.org/scripts/sniff.sh)
@@ -81,20 +82,20 @@ set -eu
 
 # Installs the packages required to install and run the Service Grid.
 log "Installing common packages"
-curl -sSL $scripts/install-common.sh | bash
+curl -sSL $SCRIPTS/install-common.sh | bash
 
 # Edit the properties file to get it out of the way and allow then
 # rest of the script to continue uninterrupted.
 log "Configuring the Service Manager"
 if [[ ! -e service-manager.properties ]] ; then
-	wget $manager/service-manager.properties
+	wget $MANAGER/service-manager.properties
 fi
 $EDITOR service-manager.properties
 
 log "Installing Java"
-curl -sSL $scripts/install-java.sh | bash
+curl -sSL $SCRIPTS/install-java.sh | bash
 log "Installing PostgreSQL"
-curl -sSL $scripts/install-postgres.sh | bash
+curl -sSL $SCRIPTS/install-postgres.sh | bash
 
 if [[ $OS = centos || $OS = redhat7 ]] ; then
 	hba=/var/lib/pgsql/9.6/data/pg_hba.conf
@@ -106,14 +107,14 @@ if [[ $OS = centos || $OS = redhat7 ]] ; then
 fi
 
 if [ ! -e ServiceManager.config ] ; then
-	wget $manager/ServiceManager.config
+	wget $MANAGER/ServiceManager.config
 fi
 
 # Get the program used to transform the ServiceManager.config file
 # into the various xml files.
-wget http://downloads.lappsgrid.org/$smg.tgz
-tar xzf $smg.tgz
-chmod +x $smg/smg
+wget http://downloads.lappsgrid.org/$SMG.tgz
+tar xzf $SMG.tgz
+chmod +x $SMG/smg
 
 # Processing the ServiceManager.config will generate:
 # 	service_manager.xml
@@ -122,7 +123,7 @@ chmod +x $smg/smg
 # 	tomcat-users-bpel.xml
 # 	langrid.ae.properties
 # 	db.config
-$smg/smg ServiceManager.config
+$SMG/smg ServiceManager.config
 source db.config
 
 sudo -u postgres createuser -S -D -R $ROLENAME
@@ -131,18 +132,5 @@ sudo -u postgres createdb $DATABASE -O $ROLENAME -E 'UTF8'
 
 # Now install Tomcat and create the PostgreSQL database.
 log "Starting Tomcat installation."
-curl -sSL $manager/install-tomcat.sh | bash
+curl -sSL $MANAGER/install-tomcat.sh | bash
 
-cp tomcat-users.xml $MANAGER/conf
-cp service_manager.xml $MANAGER/conf/Catalina/localhost
-
-cp tomcat-users-bpel.xml $BPEL/conf/tomcat-users.xml
-cp active-bpel.xml $BPEL/conf/Catalina/localhost
-cp langrid.ae.properties $BPEL/bpr
-
-# Get the new .war file before starting Tomcat for the first time.
-log "Downloading the latest service manager war file."
-wget https://github.com`wget -qO- https://github.com/openlangrid/langrid/releases/latest | grep --color=never \.war\" | cut -d '"' -f 2 `
-mv `ls *.war | head -1` $MANAGER/webapps/service_manager.war
-
-toggle_tomcat

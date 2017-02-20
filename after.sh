@@ -62,12 +62,26 @@ if [[ -z $OS ]] ; then
 	exit 1
 fi
 
+cp tomcat-users.xml $TOMCAT_MANAGER/conf
+cp service_manager.xml $TOMCAT_MANAGER/conf/Catalina/localhost
+
+cp tomcat-users-bpel.xml $TOMCAT_BPEL/conf/tomcat-users.xml
+cp active-bpel.xml $TOMCAT_BPEL/conf/Catalina/localhost
+cp langrid.ae.properties $TOMCAT_BPEL/bpr
+
+# Get the new .war file before starting Tomcat for the first time.
+log "Downloading the latest service manager war file."
+wget https://github.com`wget -qO- https://github.com/openlangrid/langrid/releases/latest | grep --color=never \.war\" | cut -d '"' -f 2 `
+mv `ls *.war | head -1` $TOMCAT_MANAGER/webapps/service_manager.war
+
+toggle_tomcat
+
 log "Creating indices."
-wget $manager/create_indices.sql
+wget $MANAGER/create_indices.sql
 cat create_indices.sql | sudo -u postgres psql $DATABASE
 
 log "Creating stored procedure."
-wget $manager/create_storedproc.sql
+wget $MANAGER/create_storedproc.sql
 cat create_storedproc.sql | sudo -u postgres psql $DATABASE 
 
 # We need to generate this on the fly since it include the user
@@ -77,7 +91,7 @@ echo "ALTER FUNCTION \"AccessStat.increment\"(character varying, character varyi
 cat alter.sql | sudo -u postgres psql $DATABASE
 
 log "Securing the Tomcat installations"
-for dir in $MANAGER $BPEL ; do
+for dir in $TOMCAT_MANAGER $TOMCAT_BPEL ; do
 	pushd $dir > /dev/null
 	# Make the tomcat user the owner of everything.
 	chown -R tomcat:tomcat .
@@ -93,7 +107,7 @@ for dir in $MANAGER $BPEL ; do
 done
 
 #log "Removing default webapps."
-#for dir in $MANAGER/webapps $BPEL/webapps ; do
+#for dir in $TOMCAT_MANAGER/webapps $TOMCAT_BPEL/webapps ; do
 #	pushd $dir > /dev/null
 #	rm -rf docs examples manager host-manager
 #	popd > /dev/null
