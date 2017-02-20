@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 set -u
 
-smg=smg-1.1.0-SNAPSHOT
-manager=http://downloads.lappsgrid.org/service-manager
-scripts=http://downloads.lappsgrid.org/scripts
+export SMG=smg-1.1.0-SNAPSHOT
+#manager=http://downloads.lappsgrid.org/service-manager
+export MANAGER=https://raw.githubusercontent.com/lappsgrid-incubator/service-manager-installation/17-centos-start
+export SCRIPTS=http://downloads.lappsgrid.org/scripts
 
 # Locations that Tomcat is installed.
-MANAGER=/usr/share/tomcat/service-manager
-BPEL=/usr/share/tomcat/active-bpel
+TOMCAT_MANAGER=/usr/share/tomcat/service-manager
+TOMCAT_BPEL=/usr/share/tomcat/active-bpel
 
 function usage()
 {
@@ -50,9 +51,11 @@ function wait_for {
 
 function toggle_tomcat {
 	start_tomcat
-	wait_for $MANAGER
-	wait_for $BPEL
+	sleep 1
+	wait_for $TOMCAT_MANAGER
+	wait_for $TOMCAT_BPEL
 	stop_tomcat
+	sleep 5
 }
 
 source <(curl -sSL http://downloads.lappsgrid.org/scripts/sniff.sh)
