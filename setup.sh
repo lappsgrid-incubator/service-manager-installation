@@ -39,10 +39,14 @@ function stop_tomcat {
 		systemctl stop tomcat
 	else
 		service tomcat stop
+		while [[ `ps aux | grep bootstrap.jar | grep -v grep | wc -l` -gt 0 ]] ; do
+			echo "Waiting for tomcat to shut down."
+			sleep 5
+		done
 	fi
 }
 
-function wait_for {
+function wait_for_start {
 	while ! grep "Server startup in" $1/logs/catalina.out ; do
 		log "Waiting for $1 to start"
 		sleep 3
@@ -51,8 +55,8 @@ function wait_for {
 
 function toggle_tomcat {
 	start_tomcat
-	wait_for $TOMCAT_MANAGER
-	wait_for $TOMCAT_BPEL
+	wait_for_start $TOMCAT_MANAGER
+	wait_for_start $TOMCAT_BPEL
 	stop_tomcat
 	sleep 5
 }
