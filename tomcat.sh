@@ -1,59 +1,122 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ### BEGIN INIT INFO
-# Provides:    tomcat
-# Description: Control script for Tomcat. 
+# Provides:        tomcat7
+# Required-Start:  $network
+# Required-Stop:   $network
+# Default-Start:   2 3 4 5
+# Default-Stop:    0 1 6
+# Short-Description: Start/Stop Tomcat server
 ### END INIT INFO
 
-if [ -z "$JAVA_HOME" ] ; then
-	JAVA_HOME=/usr/lib/jvm/java-7-oracle
+TOMCAT=/usr/share/tomcat
+MANAGER=$TOMCAT/service-manager
+BPEL=$TOMCAT/active-bpel
+
+if [[ -z $JAVA_HOME ]] ; then
+	export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
 fi
 
-TOMCAT_ROOT=/usr/share/tomcat
-MANAGER=$TOMCAT_ROOT/service-manager
-BPEL=$TOMCAT_ROOT/active-bpel
-TOMCAT_USER=tomcat
+function getpid()
+{
+    echo `ps aux | grep $1 | grep -v grep | awk '{print $2}'`
+}
 
 function start()
 {
-	sudo -u $TOMCAT_USER $MANAGER/bin/startup.sh
-	sudo -u $TOMCAT_USER $BPEL/bin/startup.sh
+	for server in service-manager active-bpel ; do
+		local pid=$(getpid $server)
+		if [[ -z $pid ]] ; then
+			sudo -u tomcat $TOMCAT/$server/bin/startup.sh
+		else
+			echo "$server is already running: $pid"
+		fi
+	done
 }
 
 function stop()
 {
-	sudo -u $TOMCAT_USER $MANAGER/bin/shutdown.sh
-	sudo -u $TOMCAT_USER $BPEL/bin/shutdown.sh
+	for server in service-manager active-bpel ; do
+		local pid=$(getpid $server)
+		if [[ -n $pid ]] ; then
+			sudo -u tomcat $TOMCAT/$server/bin/shutdown.sh
+		else
+			echo "$server is not running."
+		fi
+	done
+}
+
+function status()
+{
+	local pid=$(getpid service-manager)
+	if [[ -n $pid ]] ; then
+		echo "Service Manager: $pid"
+	else
+		echo "Service Manager: offline"
+    fi
+    
+	pid=$(getpid active-bpel)
+	if [[ -n $pid ]] ; then
+		echo "BPEL Server: $pid"
+	else
+		echo "BPEL Server: offline"
+    fi
+}
+
+function usage()
+{
+    echo
+    echo "USAGE" 
+    echo "    tomcat [start|stop|status|restart|force-stop|force-restart"
+    echo
+}
+
+function kill_tomcat()
+{
+    echo "Killing zombie tomcat instances."
+    ps aux | grep bootstrap.jar | grep -v grep | awk '{print $2}' | xargs kill -9
 }
 
 case $1 in
-	start)
-		echo -n "Staring Tomcat instances"
-		start
-		echo "Done."
+    start)
+		echo "Starting the Service Grid."
+		start 
+		echo "Done"
 		;;
-	stop)
-		echo "Stopping Tomcat instances"
+    stop)
+		echo "Stopping the Service Grid."
 		stop
-		echo "Done."
+		echo "Done"
 		;;
-	restart)
-		echo "Restarting Tomcat instances"
-		stop
+    status)
+		status
+		;;
+    restart)
+		echo "Restarting the Service Grid."
+		stop 
 		sleep 5
 		start
 		echo "Done"
 		;;
-	force-reload)
-		echo "Forcing Tomcat instances to restart."
+    force-stop)
+		echo "Killing all Tomcat instances."
+		stop
+		echo "Waiting for tomcat to quit cleanly."
+		sleep 5
+		kill_tomcat 
+		echo "Done."
+		;;
+    force-restart)
+		echo "Forcing a restart."
 		stop
 		sleep 5
-		ps a | grep tomcat | grep java | cut -d\  -f2 | xargs kill -9
-		sleep 4
+		kill_tomcat
+		sleep 2
 		start
 		echo "Done."
 		;;
-	status)
-		echo "Unsupported option: status"
+    *)
+		echo "Unknown command $1"
+		usage
 		;;
 esac

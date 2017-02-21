@@ -39,14 +39,10 @@ function stop_tomcat {
 		systemctl stop tomcat
 	else
 		service tomcat stop
-		while [[ `ps aux | grep bootstrap.jar | grep -v grep | wc -l` -gt 0 ]] ; do
-			echo "Waiting for tomcat to shut down."
-			sleep 5
-		done
 	fi
 }
 
-function wait_for_start {
+function wait_for {
 	while ! grep "Server startup in" $1/logs/catalina.out ; do
 		log "Waiting for $1 to start"
 		sleep 3
@@ -55,8 +51,8 @@ function wait_for_start {
 
 function toggle_tomcat {
 	start_tomcat
-	wait_for_start $TOMCAT_MANAGER
-	wait_for_start $TOMCAT_BPEL
+	wait_for $TOMCAT_MANAGER
+	wait_for $TOMCAT_BPEL
 	stop_tomcat
 	sleep 5
 }
@@ -71,7 +67,7 @@ fi
 if [[ $OS = ubuntu ]] ; then
 	log "Updating apt-get indices."
 	apt-get update && apt-get upgrade -y
-elif [[ $OS = redhat* || $OS = centos ]] ; then
+elif [[ $OS = redhat || $OS = centos ]] ; then
 	yum makecache fast
 else
 	log "Unsupport Linux flavor: $OS"
@@ -138,63 +134,3 @@ sudo -u postgres createdb $DATABASE -O $ROLENAME -E 'UTF8'
 log "Starting Tomcat installation."
 curl -sSL $MANAGER/install-tomcat.sh | bash
 
-cp tomcat-users.xml $TOMCAT_MANAGER/conf
-cp service_manager.xml $TOMCAT_MANAGER/conf/Catalina/localhost
-
-cp tomcat-users-bpel.xml $TOMCAT_BPEL/conf/tomcat-users.xml
-cp active-bpel.xml $TOMCAT_BPEL/conf/Catalina/localhost
-cp langrid.ae.properties $TOMCAT_BPEL/bpr
-
-# Get the new .war file before starting Tomcat for the first time.
-log "Downloading the latest service manager war file."
-wget https://github.com`wget -qO- https://github.com/openlangrid/langrid/releases/latest | grep --color=never \.war\" | cut -d '"' -f 2 `
-mv `ls *.war | head -1` $TOMCAT_MANAGER/webapps/service_manager.war
-
-toggle_tomcat
-
-log "Creating indices."
-wget $MANAGER/create_indices.sql
-cat create_indices.sql | sudo -u postgres psql $DATABASE
-
-log "Creating stored procedure."
-wget $MANAGER/create_storedproc.sql
-cat create_storedproc.sql | sudo -u postgres psql $DATABASE 
-
-# We need to generate this on the fly since it include the user
-# defined ROLENAME.
-log "Changing owner of the stored procedure."
-echo "ALTER FUNCTION \"AccessStat.increment\"(character varying, character varying, character varying, character varying, character varying, timestamp without time zone, timestamp without time zone, integer, timestamp without time zone, integer, timestamp without time zone, integer, integer, integer, integer) OWNER TO $ROLENAME" > alter.sql
-cat alter.sql | sudo -u postgres psql $DATABASE
-
-log "Securing the Tomcat installations"
-for dir in $TOMCAT_MANAGER $TOMCAT_BPEL ; do
-	pushd $dir > /dev/null
-	# Make the tomcat user the owner of everything.
-	chown -R tomcat:tomcat .
-
-	# Tighten permissions on subdirectories.
-	chmod -R 0700 bin
-	chmod -R 0700 conf
-	chmod -R 0750 logs
-	chmod -R 0700 temp
-	chmod -R 0700 work
-	chmod -R 0770 webapps
-	popd > /dev/null
-done
-
-#log "Removing default webapps."
-#for dir in $TOMCAT_MANAGER/webapps $TOMCAT_BPEL/webapps ; do
-#	pushd $dir > /dev/null
-#	rm -rf docs examples manager host-manager
-#	popd > /dev/null
-#done
-
-if [[ $OS = redhat7 || $OS = centos ]] ; then
-	log "Opening port 8080"
-	iptables -I INPUT -p tcp -m tcp --dport 8080 -j ACCEPT
-fi
-
-start_tomcat 
-
-log "The Service Grid is now running."
-echo

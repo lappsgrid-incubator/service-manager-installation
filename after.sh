@@ -39,14 +39,10 @@ function stop_tomcat {
 		systemctl stop tomcat
 	else
 		service tomcat stop
-		while [[ `ps aux | grep bootstrap.jar | grep -v grep | wc -l` -gt 0 ]] ; do
-			echo "Waiting for tomcat to shut down."
-			sleep 5
-		done
 	fi
 }
 
-function wait_for_start {
+function wait_for {
 	while ! grep "Server startup in" $1/logs/catalina.out ; do
 		log "Waiting for $1 to start"
 		sleep 3
@@ -55,8 +51,9 @@ function wait_for_start {
 
 function toggle_tomcat {
 	start_tomcat
-	wait_for_start $TOMCAT_MANAGER
-	wait_for_start $TOMCAT_BPEL
+	sleep 1
+	wait_for $TOMCAT_MANAGER
+	wait_for $TOMCAT_BPEL
 	stop_tomcat
 	sleep 5
 }
@@ -67,76 +64,6 @@ if [[ -z $OS ]] ; then
 	log "The variable OS has not been set!"
 	exit 1
 fi
-
-if [[ $OS = ubuntu ]] ; then
-	log "Updating apt-get indices."
-	apt-get update && apt-get upgrade -y
-elif [[ $OS = redhat* || $OS = centos ]] ; then
-	yum makecache fast
-else
-	log "Unsupport Linux flavor: $OS"
-	exit 1
-fi
-
-set +u
-if [[ -z "$EDITOR" ]] ; then
-	EDITOR=emacs
-fi
-set -eu
-
-# Installs the packages required to install and run the Service Grid.
-log "Installing common packages"
-curl -sSL $SCRIPTS/install-common.sh | bash
-
-# Edit the properties file to get it out of the way and allow then
-# rest of the script to continue uninterrupted.
-log "Configuring the Service Manager"
-if [[ ! -e service-manager.properties ]] ; then
-	wget $MANAGER/service-manager.properties
-fi
-$EDITOR service-manager.properties
-
-log "Installing Java"
-curl -sSL $SCRIPTS/install-java.sh | bash
-log "Installing PostgreSQL"
-curl -sSL $SCRIPTS/install-postgres.sh | bash
-
-if [[ $OS = centos || $OS = redhat7 ]] ; then
-	hba=/var/lib/pgsql/9.6/data/pg_hba.conf
-	rm $hba
-	echo "local all all trust" > $hba
-	echo "host all all 127.0.0.1/32 trust" >> $hba
-	echo "host all all ::1/128 trust" >> $hba
-	systemctl restart postgresql-9.6
-fi
-
-if [ ! -e ServiceManager.config ] ; then
-	wget $MANAGER/ServiceManager.config
-fi
-
-# Get the program used to transform the ServiceManager.config file
-# into the various xml files.
-wget http://downloads.lappsgrid.org/$SMG.tgz
-tar xzf $SMG.tgz
-chmod +x $SMG/smg
-
-# Processing the ServiceManager.config will generate:
-# 	service_manager.xml
-# 	active-bpel.xml
-# 	tomcat-users.xml
-# 	tomcat-users-bpel.xml
-# 	langrid.ae.properties
-# 	db.config
-$SMG/smg ServiceManager.config
-source db.config
-
-sudo -u postgres createuser -S -D -R $ROLENAME
-sudo -u postgres psql --command "ALTER USER $ROLENAME WITH PASSWORD '$PASSWORD'"
-sudo -u postgres createdb $DATABASE -O $ROLENAME -E 'UTF8'
-
-# Now install Tomcat and create the PostgreSQL database.
-log "Starting Tomcat installation."
-curl -sSL $MANAGER/install-tomcat.sh | bash
 
 cp tomcat-users.xml $TOMCAT_MANAGER/conf
 cp service_manager.xml $TOMCAT_MANAGER/conf/Catalina/localhost
@@ -151,6 +78,7 @@ wget https://github.com`wget -qO- https://github.com/openlangrid/langrid/release
 mv `ls *.war | head -1` $TOMCAT_MANAGER/webapps/service_manager.war
 
 toggle_tomcat
+source db.confg
 
 log "Creating indices."
 wget $MANAGER/create_indices.sql
