@@ -2,8 +2,7 @@
 set -u
 
 export SMG=smg-1.1.0-SNAPSHOT
-#manager=http://downloads.lappsgrid.org/service-manager
-export MANAGER=https://raw.githubusercontent.com/lappsgrid-incubator/service-manager-installation/17-centos-start
+export MANAGER=http://downloads.lappsgrid.org/service-manager
 export SCRIPTS=http://downloads.lappsgrid.org/scripts
 
 # Locations that Tomcat is installed.

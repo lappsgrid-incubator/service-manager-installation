@@ -3,8 +3,7 @@
 # The manager variable should be picked up from the calling environment.  If not
 # we set it to a likely default value.
 if [[ -z $MANAGER ]] ; then
-	#manager=http://downloads.lappsgrid.org/service-manager
-	MANAGER=https://raw.githubusercontent.com/lappsgrid-incubator/service-manager-installation/17-centos-start
+	MANAGER=http://downloads.lappsgrid.org/service-manager
 fi
 
 if [ -z "$OS" ] ; then
