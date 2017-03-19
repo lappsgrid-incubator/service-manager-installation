@@ -146,7 +146,10 @@ cp langrid.ae.properties $TOMCAT_BPEL/bpr
 
 # Get the new .war file before starting Tomcat for the first time.
 log "Downloading the latest service manager war file."
-wget https://github.com`wget -qO- https://github.com/openlangrid/langrid/releases/ | grep --color=never 'jp\.go\.nict\.langrid\.webapps\.servicegrid-core\..\+\.war\"' | head -1 | cut -d '"' -f 2 `
+## this line parses "releases" page from github to get the (supposedly) latest servicegrid war file
+# wget https://github.com`wget -qO- https://github.com/openlangrid/langrid/releases/ | grep --color=never 'jp\.go\.nict\.langrid\.webapps\.servicegrid-core\..\+\.war\"' | head -1 | cut -d '"' -f 2 `
+## however, we decided to use hard-coded perm. path to avoid unexpected breaks.
+wget https://github.com/openlangrid/langrid/releases/download/servicegrid-core-20161206/jp.go.nict.langrid.webapps.servicegrid-core.jxta-p2p.nict-nlp-20161206.war
 mv `ls *.war | head -1` $TOMCAT_MANAGER/webapps/service_manager.war
 
 toggle_tomcat
