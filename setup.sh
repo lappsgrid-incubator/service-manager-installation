@@ -146,7 +146,7 @@ cp langrid.ae.properties $TOMCAT_BPEL/bpr
 
 # Get the new .war file before starting Tomcat for the first time.
 log "Downloading the latest service manager war file."
-wget https://github.com`wget -qO- https://github.com/openlangrid/langrid/releases/latest | grep --color=never \.war\" | cut -d '"' -f 2 `
+wget https://github.com`wget -qO- https://github.com/openlangrid/langrid/releases/ | grep --color=never 'jp\.go\.nict\.langrid\.webapps\.servicegrid-core\..\+\.war\"' | head -1 | cut -d '"' -f 2 `
 mv `ls *.war | head -1` $TOMCAT_MANAGER/webapps/service_manager.war
 
 toggle_tomcat
