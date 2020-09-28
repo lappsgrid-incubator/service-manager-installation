@@ -14,7 +14,7 @@ fi
 if ! id tomcat ; then
     if [[ $OS = redhat* || $OS = centos ]] ; then
         adduser -r -d /usr/share/tomcat -s /usr/bin/bash tomcat
-    elif [[ $OS = ubuntu ]] ; then
+    elif [[ $OS == *ubuntu* ]] ; then
         groupadd tomcat
         adduser --system --home /usr/share/tomcat --shell /usr/bin/bash --ingroup tomcat tomcat
     else

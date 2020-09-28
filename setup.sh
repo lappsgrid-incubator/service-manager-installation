@@ -67,7 +67,7 @@ if [[ -z $OS ]] ; then
 	exit 1
 fi
 
-if [[ $OS = ubuntu ]] ; then
+if [[ $OS == *ubuntu* ]] ; then
 	log "Updating apt-get indices."
 	apt-get update && apt-get upgrade -y
 elif [[ $OS = redhat* || $OS = centos ]] ; then
