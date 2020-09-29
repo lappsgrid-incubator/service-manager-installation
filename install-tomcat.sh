@@ -42,6 +42,7 @@ elif [[ $OS = ubuntu || $OS = redhat6 ]] ; then
         update-rc.d tomcat defaults
     else 
         chkconfig --add tomcat
+    fi
 else
 	echo "Unknown Linux flavor... we should have failed already."
 	exit 1
