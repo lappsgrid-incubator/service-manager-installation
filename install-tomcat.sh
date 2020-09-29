@@ -18,7 +18,7 @@ if ! id tomcat ; then
         groupadd tomcat
         adduser --system --home /usr/share/tomcat --shell /usr/bin/bash --ingroup tomcat tomcat
     else
-        echo "Unknown Linux flavor"
+        echo "Unknown Linux flavor $OS"
         exit 1
     fi
 fi 
@@ -34,11 +34,11 @@ if [[ $OS = centos || $OS = redhat7 ]] ; then
     mv tomcat.service /etc/systemd/system/
     systemctl daemon-reload
     systemctl enable tomcat.service
-elif [[ $OS = ubuntu || $OS = redhat6 ]] ; then
+elif [[ $OS == *ubuntu* || $OS = redhat6 ]] ; then
     wget $MANAGER/tomcat.sh
     mv tomcat.sh /etc/init.d/tomcat
     chmod +x /etc/init.d/tomcat
-    if [[ $OS = ubuntu ]]; then 
+    if [[ $OS == *ubuntu* ]]; then 
         update-rc.d tomcat defaults
     else 
         chkconfig --add tomcat
